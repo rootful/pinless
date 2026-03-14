@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinless</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%221em%22 font-size=%2280%22>📌</text></svg>">
+    <style>
+        body {
+            background: #121212;
+            color: #fff;
+            font-family: sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 0 16px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        header {
+            text-align: center;
+            font-size: x-large;
+            margin-top: -32.16px;
+            margin-bottom: -1rem;
+        }
+
+        input#search {
+            all: unset;
+            background: #222;
+            color: #fff;
+            padding: 0.7rem 1rem;
+            border-radius: 24px;
+            width: 100%;
+        }
+
+        .search {
+            width: 500px;
+            max-width: 85vw;
+            position: relative;
+            margin: 0.5rem auto 1.2rem;
+            display: flex;
+        }
+
+        button[type="submit"] {
+            all: unset;
+            position: absolute;
+            right: 4px;
+            top: 5px;
+            height: 30px;
+            width: 30px;
+            color: #e60023;
+            background-color: #222;
+            cursor: pointer;
+            z-index: 10;
+            border-radius: 50%;
+        }
+
+        .links {
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        a {
+            color: #e60023;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .dot {
+            color: #888;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Pinless</h1>
+        </header>
+
+        <form action="/search/pins/" method="GET">
+            <div class="search">
+                <input id="search" type="text" name="q" placeholder="Search for the cute cats, memes, etc."
+                    required />
+                <button type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="lucide lucide-search">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                    </svg></button>
+            </div>
+        </form>
+        <div class="links">
+            <a href="https://github.com/bunk-im/pinless" target="_blank">Source</a><span class="dot">•</span>
+            <a href="https://github.com/bunk-im/instances.md" target="_blank">Instances</a><span class="dot">•</span>
+            <a href="/about">About</a>
+        </div>
+    </div>
+</body>
+
+</html>
+</div>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Pin.Title }} - Pinless</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%221em%22 font-size=%2280%22>📌</text></svg>">
+    <style>
+        body {
+            background: #121212;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: sans-serif;
+            scrollbar-color: gray #121212;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 100vw;
+            gap: 1rem;
+            width: 90%;
+            margin: 0 auto;
+            margin-bottom: 20px;
+        }
+
+        input#search {
+            all: unset;
+            background: #222;
+            color: #fff;
+            padding: 0.7rem 1rem;
+            border-radius: 24px;
+            width: 100%;
+        }
+
+        .search {
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            display: flex;
+        }
+
+        button[type="submit"] {
+            all: unset;
+            position: absolute;
+            right: 4px;
+            top: 5px;
+            height: 30px;
+            width: 30px;
+            color: #e60023;
+            background-color: #222;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-full {
+            display: inline;
+        }
+        .logo-short {
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .logo-full {
+                display: none;
+            }
+            .logo-short {
+                display: inline;
+            }
+        }
+
+        .pin-container {
+            max-width: 800px;
+            width: 100%;
+            background: #1e1e1e;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .pin-container img {
+            width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            display: block;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .pin-info {
+            padding: 20px;
+        }
+
+        .pin-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .pin-description {
+            font-size: 1rem;
+            color: #ccc;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .pin-pinner {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .related-section {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .related-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            padding-left: 10px;
+        }
+
+        .grid-container {
+            columns: 5 200px;
+            column-gap: 1.5rem;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .grid-container div {
+            margin: 0 1.5rem 1.5rem 0;
+            display: inline-block;
+            width: 100%;
+            padding: 5px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .grid-container div img {
+            width: 100%;
+            border-radius: 16px;
+            display: block;
+            cursor: pointer;
+        }
+
+        .no-related {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="search-container">
+        <h1><a href="/"><span class="logo-short">P</span><span class="logo-full">Pinless</span></a></h1>
+        <form action="/search/pins/" method="GET" class="search">
+            <input id="search" type="text" name="q" placeholder="Search for the cute cats, memes, etc."
+                required />
+            <button type="submit"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-search">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                </svg></button>
+        </form>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; max-width: 850px; width: 100%;">
+        {{if .From}}
+        <a href="/pin/{{.From}}?csrftoken={{ .CSRFToken | urlquery }}&q={{ .Query | urlquery }}" style="color: #888; text-decoration: none; font-size: 2rem; padding: 10px;">←</a>
+        {{else}}
+        <a href="/search/pins/?q={{ .Query | urlquery }}" style="color: #888; text-decoration: none; font-size: 2rem; padding: 10px;">←</a>
+        {{end}}
+        <div class="pin-container">
+        {{if .Pin.ImageURL}}
+        <img src="{{ .Pin.ImageURL }}" alt="{{ .Pin.Title }}" />
+        {{end}}
+        <div class="pin-info">
+            {{if .Pin.Title}}
+            <div class="pin-title">{{ .Pin.Title }}</div>
+            {{end}}
+            {{if .Pin.Description}}
+            <div class="pin-description">{{ .Pin.Description }}</div>
+            {{end}}
+            {{if .Pin.PinnerName}}
+            <div class="pin-pinner">Pinned by {{ .Pin.PinnerName }}</div>
+            {{end}}
+        </div>
+    </div>
+    </div>
+
+    <div class="related-section">
+        <div class="related-title">Related Pins</div>
+        {{if .Related}}
+        <div class="grid-container">
+            {{range .Related}}
+            <div>
+                <a href="/pin/{{.ID}}?csrftoken={{ $.CSRFToken | urlquery }}&q={{ $.Query | urlquery }}&from={{ $.Pin.ID }}">
+                    <img src="{{.ImageURL}}" alt="{{.Title}}" title="{{.Title}}" />
+                </a>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="no-related">No related pins found</div>
+        {{end}}
+    </div>
+</body>
+
+</html>

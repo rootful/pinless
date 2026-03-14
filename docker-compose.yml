@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  pinless:
+    container_name: pinless
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    environment:
+      - URL=http://localhost:3000
