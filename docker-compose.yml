@@ -10,4 +10,4 @@ services:
     volumes:
       - .:/app
     environment:
-      - URL=http://localhost:3000
+      - URL=http://localhost:3000 # change to eg https://yourdomain.com
