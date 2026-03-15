@@ -16,6 +16,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow-x: hidden;
         }
 
         .container {
@@ -53,17 +54,19 @@
         }
 
         .search {
-            width: 500px;
-            max-width: 85vw;
+            width: 100%;
+            max-width: 500px;
             position: relative;
             margin: 0.5rem auto 1.2rem;
             display: flex;
+            padding: 0 16px;
+            box-sizing: border-box;
         }
 
         button[type="submit"] {
             all: unset;
             position: absolute;
-            right: 4px;
+            right: 20px;
             top: 5px;
             height: 30px;
             width: 30px;
@@ -124,4 +127,3 @@
 </body>
 
 </html>
-</div>
