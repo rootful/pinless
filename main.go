@@ -91,7 +91,7 @@ func searchHandler(c *gin.Context) {
 	}
 
 	// clear bookmark if new search
-	if c.Query("next") == "" {
+	if _, nextExists := c.GetQuery("next"); !nextExists {
 		c.SetCookie("bookmark", "", -1, "/", "", false, true)
 		bookmark = ""
 	}
@@ -299,7 +299,7 @@ func pinHandler(c *gin.Context) {
 		bookmark = cookie
 	}
 
-	if c.Query("next") == "" {
+	if _, nextExists := c.GetQuery("next"); !nextExists {
 		c.SetCookie("bookmark", "", -1, "/", "", false, true)
 		bookmark = ""
 	}
