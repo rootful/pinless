@@ -221,6 +221,13 @@
             </div>
             {{end}}
         </div>
+        {{if .RelatedBookmark}}
+        <div class="pagination-container">
+            <h2 style="text-align: center;">
+                <a href="/pin/{{ .Pin.ID }}?csrftoken={{ .CSRFToken | urlquery }}&q={{ .Query | urlquery }}&bookmark={{ .RelatedBookmark | urlquery }}&from={{ .From | urlquery }}">Next page</a>
+            </h2>
+        </div>
+        {{end}}
         {{else}}
         <div class="no-related">No related pins found</div>
         {{end}}

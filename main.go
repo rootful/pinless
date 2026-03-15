@@ -277,17 +277,19 @@ func pinHandler(c *gin.Context) {
 	csrftoken := c.Query("csrftoken")
 	query := c.Query("q")
 	from := c.Query("from")
+	bookmark := c.Query("bookmark")
 
 	pin := fetchPinDetails(pinID, csrftoken, URL)
 
-	related := fetchRelatedPins(pinID, csrftoken, URL)
+	related, nextBookmark := fetchRelatedPins(pinID, csrftoken, URL, bookmark)
 
 	c.HTML(http.StatusOK, "pin.html", gin.H{
-		"Pin":       pin,
-		"Related":   related,
-		"CSRFToken": csrftoken,
-		"Query":     query,
-		"From":      from,
+		"Pin":          pin,
+		"Related":      related,
+		"RelatedBookmark": nextBookmark,
+		"CSRFToken":    csrftoken,
+		"Query":        query,
+		"From":         from,
 	})
 }
 
@@ -396,7 +398,7 @@ func fetchPinDetails(pinID string, csrftoken string, baseURL string) Pin {
 	return pin
 }
 
-func fetchRelatedPins(pinID string, csrftoken string, baseURL string) []Pin {
+func fetchRelatedPins(pinID string, csrftoken string, baseURL string, bookmark string) ([]Pin, string) {
 	apiURL := "https://www.pinterest.com/resource/RelatedModulesResource/get/"
 	sourceURL := fmt.Sprintf("/pin/%s/", pinID)
 	options := map[string]interface{}{
@@ -404,13 +406,28 @@ func fetchRelatedPins(pinID string, csrftoken string, baseURL string) []Pin {
 		"page_size": 12,
 		"source":    "pin",
 	}
+	if bookmark != "" {
+		options["bookmarks"] = []string{bookmark}
+	}
 	dataParamObj := map[string]interface{}{"options": options}
 	dataParam, _ := json.Marshal(dataParamObj)
 	dataParamEscaped := url.QueryEscape(string(dataParam))
 	sourceURLEscaped := url.QueryEscape(sourceURL)
+
 	finalURL := fmt.Sprintf("%s?source_url=%s&data=%s", apiURL, sourceURLEscaped, dataParamEscaped)
 
-	req, _ := http.NewRequest(http.MethodGet, finalURL, nil)
+	method := http.MethodGet
+	var body io.Reader
+	if bookmark != "" {
+		method = http.MethodPost
+		finalURL = apiURL
+		body = strings.NewReader("data=" + dataParamEscaped)
+	}
+
+	req, _ := http.NewRequest(method, finalURL, body)
+	if method == http.MethodPost {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
 	req.Header.Set("Accept", "application/json, text/javascript, */*, q=0.01")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
 	req.Header.Set("Accept-Encoding", "gzip")
@@ -427,7 +444,7 @@ func fetchRelatedPins(pinID string, csrftoken string, baseURL string) []Pin {
 	client := &http.Client{Timeout: 20 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return []Pin{}
+		return []Pin{}, ""
 	}
 	defer resp.Body.Close()
 
@@ -436,7 +453,7 @@ func fetchRelatedPins(pinID string, csrftoken string, baseURL string) []Pin {
 	if strings.Contains(contentEncoding, "gzip") {
 		gzr, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return []Pin{}
+			return []Pin{}, ""
 		}
 		defer gzr.Close()
 		reader = gzr
@@ -479,11 +496,12 @@ func fetchRelatedPins(pinID string, csrftoken string, baseURL string) []Pin {
 					} `json:"aggregated_stats"`
 				} `json:"aggregated_pin_data"`
 			} `json:"data"`
+			Bookmark string `json:"bookmark,omitempty"`
 		} `json:"resource_response"`
 	}
 
 	if err := json.Unmarshal(bodyBytes, &responseData); err != nil {
-		return []Pin{}
+		return []Pin{}, ""
 	}
 
 	var related []Pin
@@ -539,7 +557,7 @@ func fetchRelatedPins(pinID string, csrftoken string, baseURL string) []Pin {
 		}
 	}
 
-	return related
+	return related, responseData.ResourceResponse.Bookmark
 }
 
 func proxyImageHandler(c *gin.Context) {
