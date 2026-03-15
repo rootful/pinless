@@ -187,7 +187,7 @@
 
     <div style="display: flex; align-items: center; gap: 10px; max-width: 850px; width: 100%;">
         {{if .From}}
-        <a href="/pin/{{.From}}?csrftoken={{ .CSRFToken | urlquery }}&q={{ .Query | urlquery }}" style="color: #888; text-decoration: none; font-size: 2rem; padding: 10px;">←</a>
+        <a href="/pin/{{.From}}?q={{ .Query | urlquery }}" style="color: #888; text-decoration: none; font-size: 2rem; padding: 10px;">←</a>
         {{else}}
         <a href="/search/pins/?q={{ .Query | urlquery }}" style="color: #888; text-decoration: none; font-size: 2rem; padding: 10px;">←</a>
         {{end}}
@@ -215,7 +215,7 @@
         <div class="grid-container">
             {{range .Related}}
             <div>
-                <a href="/pin/{{.ID}}?csrftoken={{ $.CSRFToken | urlquery }}&q={{ $.Query | urlquery }}&from={{ $.Pin.ID }}">
+                <a href="/pin/{{.ID}}?q={{ $.Query | urlquery }}&from={{ $.Pin.ID }}">
                     <img src="{{.ImageURL}}" alt="{{.Title}}" title="{{.Title}}" />
                 </a>
             </div>
@@ -224,7 +224,7 @@
         {{if .RelatedBookmark}}
         <div class="pagination-container">
             <h2 style="text-align: center;">
-                <a href="/pin/{{ .Pin.ID }}?csrftoken={{ .CSRFToken | urlquery }}&q={{ .Query | urlquery }}&bookmark={{ .RelatedBookmark | urlquery }}&from={{ .From | urlquery }}">Next page</a>
+                <a href="/pin/{{ .Pin.ID }}?q={{ .Query | urlquery }}&from={{ .From | urlquery }}&next">Next page</a>
             </h2>
         </div>
         {{end}}

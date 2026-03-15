@@ -29,8 +29,8 @@ type Pin struct {
 }
 
 type PinData struct {
-	Pin      Pin
-	Related  []Pin
+	Pin     Pin
+	Related []Pin
 }
 
 var allowedDomains = []string{"pinimg.com", "i.pinimg.com", "pinterest.com"}
@@ -83,8 +83,23 @@ func searchHandler(c *gin.Context) {
 		return
 	}
 	query := c.Query("q")
-	bookmark := c.Query("bookmark")
-	csrftoken := c.Query("csrftoken")
+
+	// get bookmark from cookie for privacy
+	bookmark := ""
+	if cookie, err := c.Cookie("bookmark"); err == nil && cookie != "" {
+		bookmark = cookie
+	}
+
+	// clear bookmark if new search
+	if c.Query("next") == "" {
+		c.SetCookie("bookmark", "", -1, "/", "", false, true)
+		bookmark = ""
+	}
+
+	csrftoken := ""
+	if cookie, err := c.Cookie("csrftoken"); err == nil && cookie != "" {
+		csrftoken = cookie
+	}
 
 	apiURL := "https://www.pinterest.com/resource/BaseSearchResource/get/"
 	options := map[string]interface{}{
@@ -144,6 +159,7 @@ func searchHandler(c *gin.Context) {
 		for _, ck := range newToken {
 			if ck != nil && ck.Name == "csrftoken" && ck.Value != "" {
 				csrftoken = ck.Value
+				c.SetCookie("csrftoken", csrftoken, 0, "/", "", false, true)
 				break
 			}
 		}
@@ -155,10 +171,8 @@ func searchHandler(c *gin.Context) {
 		gzr, gzErr := gzip.NewReader(resp.Body)
 		if gzErr != nil {
 			c.HTML(http.StatusBadGateway, "results.html", gin.H{
-				"Results":   nil,
-				"Bookmark":  "",
-				"Query":     query,
-				"CSRFToken": csrftoken,
+				"Results": nil,
+				"Query":   query,
 				"Error": gin.H{
 					"error":            "Failed to init gzip reader",
 					"upstream_status":  resp.Status,
@@ -184,10 +198,8 @@ func searchHandler(c *gin.Context) {
 			snippet = snippet[:500]
 		}
 		c.HTML(http.StatusBadGateway, "results.html", gin.H{
-			"Results":   nil,
-			"Bookmark":  "",
-			"Query":     query,
-			"CSRFToken": csrftoken,
+			"Results": nil,
+			"Query":   query,
 			"Error": gin.H{
 				"error":            "Upstream error",
 				"upstream_status":  resp.Status,
@@ -203,7 +215,7 @@ func searchHandler(c *gin.Context) {
 		ResourceResponse struct {
 			Data struct {
 				Results []struct {
-					ID string `json:"id"`
+					ID     string `json:"id"`
 					Images struct {
 						Orig struct {
 							URL string `json:"url"`
@@ -221,10 +233,8 @@ func searchHandler(c *gin.Context) {
 			snippet = snippet[:500]
 		}
 		c.HTML(http.StatusBadGateway, "results.html", gin.H{
-			"Results":   nil,
-			"Bookmark":  "",
-			"Query":     query,
-			"CSRFToken": csrftoken,
+			"Results": nil,
+			"Query":   query,
 			"Error": gin.H{
 				"error":            "Failed to decode response",
 				"upstream_status":  resp.Status,
@@ -235,6 +245,14 @@ func searchHandler(c *gin.Context) {
 			},
 		})
 		return
+	}
+
+	// store bookmark for pagination
+	if responseData.ResourceResponse.Bookmark != "" {
+		c.SetCookie("bookmark", responseData.ResourceResponse.Bookmark, 0, "/", "", false, true)
+	} else {
+		// clear cookie when no pages
+		c.SetCookie("bookmark", "", -1, "/", "", false, true)
 	}
 
 	type ResultItem struct {
@@ -255,10 +273,9 @@ func searchHandler(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "results.html", gin.H{
-		"Results":   results,
-		"Bookmark":  responseData.ResourceResponse.Bookmark,
-		"Query":     query,
-		"CSRFToken": csrftoken,
+		"Results":  results,
+		"Bookmark": responseData.ResourceResponse.Bookmark,
+		"Query":    query,
 	})
 }
 
@@ -274,22 +291,40 @@ func pinHandler(c *gin.Context) {
 	}
 
 	pinID := c.Param("id")
-	csrftoken := c.Query("csrftoken")
 	query := c.Query("q")
 	from := c.Query("from")
-	bookmark := c.Query("bookmark")
+
+	bookmark := ""
+	if cookie, err := c.Cookie("bookmark"); err == nil && cookie != "" {
+		bookmark = cookie
+	}
+
+	if c.Query("next") == "" {
+		c.SetCookie("bookmark", "", -1, "/", "", false, true)
+		bookmark = ""
+	}
+
+	csrftoken := ""
+	if cookie, err := c.Cookie("csrftoken"); err == nil && cookie != "" {
+		csrftoken = cookie
+	}
 
 	pin := fetchPinDetails(pinID, csrftoken, URL)
 
 	related, nextBookmark := fetchRelatedPins(pinID, csrftoken, URL, bookmark)
 
+	if nextBookmark != "" {
+		c.SetCookie("bookmark", nextBookmark, 0, "/", "", false, true)
+	} else {
+		c.SetCookie("bookmark", "", -1, "/", "", false, true)
+	}
+
 	c.HTML(http.StatusOK, "pin.html", gin.H{
-		"Pin":          pin,
-		"Related":      related,
+		"Pin":             pin,
+		"Related":         related,
 		"RelatedBookmark": nextBookmark,
-		"CSRFToken":    csrftoken,
-		"Query":        query,
-		"From":         from,
+		"Query":           query,
+		"From":            from,
 	})
 }
 
@@ -382,7 +417,7 @@ func fetchPinDetails(pinID string, csrftoken string, baseURL string) Pin {
 		Description: data.Description,
 		PinnerName:  data.Pinner.FullName,
 	}
-	
+
 	if data.Images.Orig.URL != "" {
 		pin.ImageURL = fmt.Sprintf("%s/image?url=%s", baseURL, url.QueryEscape(data.Images.Orig.URL))
 	} else if data.Images.Size736x.URL != "" {
@@ -511,7 +546,7 @@ func fetchRelatedPins(pinID string, csrftoken string, baseURL string, bookmark s
 			continue
 		}
 		pinCount++
-		
+
 		title := ""
 		if len(result.TitleRaw) > 0 {
 			var titleObj struct {
@@ -533,7 +568,7 @@ func fetchRelatedPins(pinID string, csrftoken string, baseURL string, bookmark s
 		if title == "" {
 			title = result.Description
 		}
-		
+
 		var imageURL string
 		if result.Images.Orig.URL != "" {
 			imageURL = fmt.Sprintf("%s/image?url=%s", baseURL, url.QueryEscape(result.Images.Orig.URL))
@@ -546,7 +581,7 @@ func fetchRelatedPins(pinID string, csrftoken string, baseURL string, bookmark s
 		} else if result.Images.Size236x.URL != "" {
 			imageURL = fmt.Sprintf("%s/image?url=%s", baseURL, url.QueryEscape(result.Images.Size236x.URL))
 		}
-		
+
 		if imageURL != "" {
 			related = append(related, Pin{
 				ID:         result.ID,

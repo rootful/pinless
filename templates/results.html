@@ -133,7 +133,7 @@
     <div class="grid-container">
         {{range .Results}}
         <div>
-            <a href="/pin/{{.ID}}?csrftoken={{ $.CSRFToken | urlquery }}&q={{ $.Query | urlquery }}">
+            <a href="/pin/{{.ID}}?q={{ $.Query | urlquery }}">
                 <img src="{{.Image}}" alt="Image" />
             </a>
         </div>
@@ -143,7 +143,7 @@
     {{ if .Bookmark }}
     <div class="pagination-container">
         <h2 style="text-align: center;">
-            <a href="/search/pins/?q={{ .Query | urlquery }}&bookmark={{ .Bookmark | urlquery }}&csrftoken={{ .CSRFToken | urlquery }}">Next page</a>
+            <a href="/search/pins/?q={{ .Query | urlquery }}&next">Next page</a>
         </h2>
     </div>
     {{ end }}

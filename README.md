@@ -3,7 +3,6 @@ A Privacy-Focused Pinterest Frontend.
 - No tracking
 - No exposing your IP address to Pinterest
 - No JavaScript
-- No cookies
 - No hassle
 
 ## Instances
