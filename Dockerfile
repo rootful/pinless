@@ -6,9 +6,8 @@ RUN go mod download
 COPY . .
 RUN go build -o pinless
 
-FROM alpine:3.19
-COPY --from=build /app/pinless /pinless
-COPY templates /templates
-COPY static /static
+FROM scratch
+COPY --from=build /app/pinless /usr/local/bin/pinless
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 EXPOSE 3000
-CMD ["/pinless"]
+CMD ["pinless"]
