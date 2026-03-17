@@ -4,7 +4,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN go build -o pinless
+RUN CGO_ENABLED=0 go build -o pinless
 
 FROM scratch
 COPY --from=build /app/pinless /usr/local/bin/pinless
